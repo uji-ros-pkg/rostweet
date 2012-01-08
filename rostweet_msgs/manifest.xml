@@ -1,0 +1,16 @@
+<package>
+  <description brief="rostweet_msgs">
+
+     ROS messages for rostweet
+
+  </description>
+  <author>Mario Prats</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/rostweet_msgs</url>
+  <depend package="roscpp"/>
+  <depend package="sensor_msgs"/>
+
+</package>
+
+

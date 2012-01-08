@@ -1,0 +1,5 @@
+<launch>
+  <node name="rostweet" pkg="rostweet" type="rostweet" output="screen">
+	<rosparam command="load" file="$(find rostweet)/launch/templateParams.yaml" />
+  </node>
+</launch>

@@ -1,0 +1,165 @@
+diff -Naur libtwitcurl/twitcurl.cpp libtwitcurl-patched/twitcurl.cpp
+--- libtwitcurl/twitcurl.cpp	2012-01-07 12:17:09.595163000 +0100
++++ libtwitcurl-patched/twitcurl.cpp	2012-01-07 12:16:41.711163000 +0100
+@@ -339,6 +339,33 @@
+ }
+ 
+ /*++
++* Added by marioprats
++* @method: twitCurl::statusUpdateWithMedia
++*
++* @description: method to update new status message in twitter profile with media upload
++
++*
++* @input: newStatus
++* @input: media file
++*
++* @output: true if POST is success, otherwise false. This does not check http
++
++*          response by twitter. Use getLastWebResponse() for that.
++*
++*--*/
++bool twitCurl::statusUpdateWithMedia( std::string& newStatus, std::string& file )
++{
++    bool retVal = false;
++    if( isCurlInit() && newStatus.length() )
++    {
++        /* Perform POST */
++        retVal = performPostWithMedia( twitterDefaults::TWITCURL_STATUSUPDATEWITHMEDIA_URL, newStatus, file );
++    }
++    return retVal;
++}
++
++
++/*++
+ * @method: twitCurl::statusShowById
+ *
+ * @description: method to get a status message by its id
+@@ -1286,6 +1313,7 @@
+     outErrResp.assign( m_errorBuffer );
+ }
+ 
++
+ /*++
+ * @method: twitCurl::curlCallback
+ *
+@@ -1723,6 +1751,74 @@
+ }
+ 
+ /*++
++* Added by marioprats
++* @method: twitCurl::performPostWithMedia
++*
++* @description: method to send http POST request with upload media. this is an internal method.
++*               twitcurl users should not use this method.
++*
++* @input: postUrl - url,
++*         dataStr - data to be posted
++*	  file - media file to upload
++*
++* @output: none
++*
++* @remarks: internal method
++*
++*--*/
++bool twitCurl::performPostWithMedia( const std::string& postUrl, std::string dataStr, std::string file)
++{
++    std::string oAuthHttpHeader;
++    struct curl_slist* pOAuthHeaderList = NULL;
++
++    /* Prepare standard params */
++    prepareStandardParams();
++
++
++
++    /* Set OAuth header */
++    m_oAuth.getOAuthHeader( eOAuthHttpPost, postUrl, "", oAuthHttpHeader );
++    if( oAuthHttpHeader.length() )
++    {
++        pOAuthHeaderList = curl_slist_append( pOAuthHeaderList, oAuthHttpHeader.c_str() );
++        
++    }
++
++    /* Disable 'Expect' header */
++    pOAuthHeaderList = curl_slist_append(pOAuthHeaderList, "Expect:");
++    curl_easy_setopt( m_curlHandle, CURLOPT_HTTPHEADER, pOAuthHeaderList );
++
++
++	struct curl_httppost *post = NULL;
++	struct curl_httppost *last = NULL;
++	CURLcode hResult;
++        //Construct the form
++	curl_formadd(&post, &last, CURLFORM_COPYNAME, "status", CURLFORM_COPYCONTENTS, dataStr.c_str(), CURLFORM_END);
++	curl_formadd(&post, &last, CURLFORM_COPYNAME, "media", CURLFORM_FILE, file.c_str(), CURLFORM_END);
++	//Specify the API Endpoint
++	hResult = curl_easy_setopt( m_curlHandle, CURLOPT_URL, postUrl.c_str());
++	//Specify the HTTP Method
++	hResult = curl_easy_setopt( m_curlHandle, CURLOPT_HTTPPOST, post);
++	//Post Away !!!
++	hResult = curl_easy_perform( m_curlHandle);
++	curl_formfree(post);
++	if(hResult != CURLE_OK){
++	    std::cout << "Cannot upload file " << std::endl;
++	    if( pOAuthHeaderList )
++	    {
++		curl_slist_free_all( pOAuthHeaderList );
++	    }
++	    return false;
++	} else {
++		if( pOAuthHeaderList )
++		{
++		    curl_slist_free_all( pOAuthHeaderList );
++		}
++		return true;
++	}
++}
++
++/*++
+ * @method: utilMakeCurlParams
+ *
+ * @description: utility function to build parameter strings in the format
+diff -Naur libtwitcurl/twitcurl.h libtwitcurl-patched/twitcurl.h
+--- libtwitcurl/twitcurl.h	2012-01-07 12:17:09.343163000 +0100
++++ libtwitcurl-patched/twitcurl.h	2012-01-07 12:16:41.619163000 +0100
+@@ -49,12 +49,12 @@
+     const std::string TWITCURL_STATUDESTROY_URL = "http://api.twitter.com/1/statuses/destroy/";
+ 
+     /* Timeline URLs */
+-    const std::string TWITCURL_HOME_TIMELINE_URL = "http://api.twitter.com/1/statuses/home_timeline.xml";
+-    const std::string TWITCURL_PUBLIC_TIMELINE_URL = "http://api.twitter.com/1/statuses/public_timeline.xml";
++    const std::string TWITCURL_HOME_TIMELINE_URL = "http://api.twitter.com/1/statuses/home_timeline.xml?include_entities=true";
++    const std::string TWITCURL_PUBLIC_TIMELINE_URL = "http://api.twitter.com/1/statuses/public_timeline.xml?include_entities=true";
+     const std::string TWITCURL_FEATURED_USERS_URL = "http://api.twitter.com/1/statuses/featured.xml";
+-    const std::string TWITCURL_FRIENDS_TIMELINE_URL = "http://api.twitter.com/1/statuses/friends_timeline.xml";
++    const std::string TWITCURL_FRIENDS_TIMELINE_URL = "http://api.twitter.com/1/statuses/friends_timeline.xml?include_entities=true";
+     const std::string TWITCURL_MENTIONS_URL = "http://api.twitter.com/1/statuses/mentions.xml";
+-    const std::string TWITCURL_USERTIMELINE_URL = "http://api.twitter.com/1/statuses/user_timeline.xml";
++    const std::string TWITCURL_USERTIMELINE_URL = "http://api.twitter.com/1/statuses/user_timeline.xml?include_entities=true";
+ 
+     /* Users URLs */
+     const std::string TWITCURL_SHOWUSERS_URL = "http://api.twitter.com/1/users/show.xml";
+@@ -101,6 +101,8 @@
+     const std::string TWITCURL_TRENDSWEEKLY_URL = "http://api.twitter.com/1/trends/weekly.json";
+     const std::string TWITCURL_TRENDSAVAILABLE_URL = "http://api.twitter.com/1/trends/available.json";
+     
++    /* Status update with media upload URL */
++    const std::string TWITCURL_STATUSUPDATEWITHMEDIA_URL = "http://upload.twitter.com/1/statuses/update_with_media.json";
+ };
+ 
+ /* twitCurl class */
+@@ -128,6 +130,7 @@
+ 
+     /* Twitter status APIs */
+     bool statusUpdate( std::string& newStatus /* in */ );
++    bool statusUpdateWithMedia( std::string& newStatus, std::string& file /* in */ );
+     bool statusShowById( std::string& statusId /* in */ );
+     bool statusDestroyById( std::string& statusId /* in */ );
+ 
+@@ -235,6 +238,7 @@
+     bool performGet( const std::string& getUrl, const std::string& oAuthHttpHeader );
+     bool performDelete( const std::string& deleteUrl );
+     bool performPost( const std::string& postUrl, std::string dataStr = "" );
++    bool performPostWithMedia( const std::string& postUrl, std::string dataStr, std::string file);
+ 
+     /* Internal cURL related methods */
+     static int curlCallback( char* data, size_t size, size_t nmemb, twitCurl* pTwitCurlObj );

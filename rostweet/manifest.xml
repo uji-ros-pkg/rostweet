@@ -1,0 +1,21 @@
+<package>
+  <description brief="rostweet">
+
+     rostweet
+
+  </description>
+  <author>Mario Prats</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/rostweet</url>
+  <depend package="roscpp"/>
+  <depend package="twitcurl"/>
+  <depend package="tinyxml"/>
+  <depend package="cv_bridge"/>
+  <depend package="opencv2"/>
+  <depend package="rostweet_msgs"/>
+  <rosdep name="libcurl"/>
+
+</package>
+
+

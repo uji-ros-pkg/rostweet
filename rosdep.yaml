@@ -1,0 +1,2 @@
+libcurl:
+ ubuntu: libcurl4-openssl-dev

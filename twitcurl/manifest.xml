@@ -1,0 +1,26 @@
+<package>
+  <description brief="twitcurl">
+
+This package contains a recent version of the twitcurl library (http://code.google.com/p/twitcurl/).
+This ROS package does not intend to modify twitcurl
+in any way, it simply provides a convenient way to download and
+compile the library, because twitcurl is not available from an OS package
+manager. However, this package might contain some temporary patches to
+twitcurl while they are being applied upstream, or while a permanent fix
+for a problem is being discussed by the twitcurl community.
+
+  </description>
+  <author>Mario Prats</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/twitcurl</url>
+  <depend package="roscpp"/>
+  <rosdep name="libcurl"/>
+
+  <export>
+    <cpp cflags="-I${prefix}/include" lflags="-Wl,-rpath,${prefix}/lib  -L${prefix}/lib -ltwit -lcurl"/>
+  </export>
+
+</package>
+
+
