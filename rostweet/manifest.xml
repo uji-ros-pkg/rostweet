@@ -1,7 +1,7 @@
 <package>
   <description brief="rostweet">
 
-     rostweet
+     rostweet is a twitter client for ROS. It allows your robots to send tweets to its followers, and to receive tweets from its following contacts.
 
   </description>
   <author>Mario Prats</author>
