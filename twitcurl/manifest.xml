@@ -15,7 +15,7 @@ for a problem is being discussed by the twitcurl community.
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/twitcurl</url>
   <depend package="roscpp"/>
-  <rosdep name="libcurl"/>
+  <rosdep name="curl"/>
 
   <export>
     <cpp cflags="-I${prefix}/include" lflags="-Wl,-rpath,${prefix}/lib  -L${prefix}/lib -ltwit -lcurl"/>
